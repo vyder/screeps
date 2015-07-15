@@ -1,10 +1,11 @@
 /**
- * Main.js - Version 0.1.0
+ * Main.js - Version 0.2.0
  * @author Vidur Murali <vidur@monkeychai.com>
  *
  * This iteration of Main.js executes the following jobs in order:
  * 1. Creates Harvesters
- * 2. Creates Priests
+ * 2. Creates a Miner
+ * 2. Creates Mules
  * 3. Upgrades Controller
  * 4. Sends a notification to Account when Controller is upgraded
  *
@@ -81,6 +82,21 @@ var HARVESTER = 'Harvester';
 var BUILDER   = 'Builder';
 
 /**
+ * Miners simply harvest energy from a Source and drop the
+ * harvested energy on the ground for Mules to pickup
+ *
+ * This division of labor makes the energy harvest production
+ * line much smoother.
+ */
+var MINER     = 'Miner';
+
+/**
+ * Mules find the nearest source of dropped energy, pick it
+ * up and drop it off at their assigned drop off point.
+ */
+var MULE      = 'Mule';
+
+/**
  * The Priests are tasked with worshiping the Controller
  * (upgrading) for all eternity.
  *
@@ -103,25 +119,103 @@ var workers = Game.creeps;
 // Resurrect any dead creeps
 // TODO: Refactor registry to worker queues
 var worker_registry = {
-    'Harvester1': {
-        'role': HARVESTER,
-        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
-        'keepSpawning': true
+    //'Harvester1': {
+    //    'role': HARVESTER,
+    //    'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+    //    'keepSpawning': false
+    //},
+    //'Harvester2': {
+    //    'role': HARVESTER,
+    //    'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+    //    'keepSpawning': false
+    //},
+    'Miner1': {
+        'role': MINER,
+        'body': [WORK, WORK, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'sourceID': '5540ec820f7b59f66436e637'
+        }
     },
-    'Harvester2': {
-        'role': HARVESTER,
-        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
-        'keepSpawning': true
+    'Miner2': {
+        'role': MINER,
+        'body': [WORK, WORK, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'sourceID': '5540ec820f7b59f66436e636'
+        }
+    },
+    'Miner3': {
+        'role': MINER,
+        'body': [WORK, WORK, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'sourceID': '5540ec820f7b59f66436e637'
+        }
+    },
+    'Mule1': {
+        'role': MULE,
+        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'pickupID': Game.flags.mulePickup1.id,
+            'dropID': homeSpawn.id
+        }
+    },
+    'Mule2': {
+        'role': MULE,
+        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'pickupID': Game.flags.mulePickup1.id,
+            'dropID': homeSpawn.id
+        }
+    },
+    'Mule3': {
+        'role': MULE,
+        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'pickupID': Game.flags.mulePickup1.id,
+            'dropID': Game.flags.muleDrop.id
+        }
+    },
+    'Mule4': {
+        'role': MULE,
+        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'pickupID': Game.flags.mulePickup2.id,
+            'dropID': Game.flags.muleDrop.id
+        }
+    },
+    'Mule5': {
+        'role': MULE,
+        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'pickupID': Game.flags.mulePickup2.id,
+            'dropID': Game.flags.builderRefuel.id
+        }
+    },
+    'Mule6': {
+        'role': MULE,
+        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+        'keepSpawning': true,
+        'memory': {
+            'pickupID': Game.flags.mulePickup1.id,
+            'dropID': Game.flags.builderRefuel.id
+        }
     },
     'Builder1': {
         'role': BUILDER,
         'body': [WORK, CARRY, CARRY, CARRY, MOVE],
-        'keepSpawning': false
+        'keepSpawning': true
     },
     'Builder2': {
         'role': BUILDER,
         'body': [WORK, CARRY, CARRY, CARRY, MOVE],
-        'keepSpawning': false
+        'keepSpawning': true
     },
     'Priest1': {
         'role': PRIEST,
@@ -137,11 +231,16 @@ var worker_registry = {
         'role': PRIEST,
         'body': [CARRY, CARRY, WORK, MOVE, MOVE],
         'keepSpawning': true
+    },
+    'Priest4': {
+        'role': PRIEST,
+        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+        'keepSpawning': true
     }
 };
 
 // pauseConstruction override in Memory
-var pauseConstruction = false || Memory.pauseConstruction;
+//var pauseConstruction = false || Memory.pauseConstruction;
 
 console.log("Life Check: ");
 _.forEach(worker_registry, function(data, name) {
@@ -161,14 +260,19 @@ _.forEach(worker_registry, function(data, name) {
             var response = homeSpawn.canCreateCreep(data['body'], name);
             if (response === OK) {
                 console.log("Resurrecting " + name + ".");
-                homeSpawn.createCreep(data['body'], name, { 'role': data.role });
+
+                var memory = { 'role': data.role };
+                if( data.memory ) {
+                    _.extend(memory, data.memory);
+                }
+                homeSpawn.createCreep(data['body'], name, memory);
             } else {
                 console.log("ERROR: Cannot create " + name + ".");
 
                 if (response === ERR_BUSY) {
                     console.log("ERROR: Spawn is busy.");
                 } else if (response === ERR_NOT_ENOUGH_ENERGY) {
-                    pauseConstruction = true;
+                    //pauseConstruction = true;
                     console.log("ERROR: Spawn does not have enough energy.");
                 } else if (response === ERR_INVALID_ARGS) {
                     console.log("ERROR: Spawn received invalid arguments to create!");
@@ -182,7 +286,8 @@ _.forEach(worker_registry, function(data, name) {
 console.log("---");
 
 var creepNameAndTitle = function(creep) {
-    return creep.name + ":" + creep.memory.role;
+    //return creep.name + ":" + creep.memory.role;
+    return creep.name;
 };
 
 /**
@@ -200,8 +305,12 @@ var reassignRole = HARVESTER;
 if( homeSpawn.energy === homeSpawn.energyCapacity ) {
     reassignRole = PRIEST;
 }
-workers['Harvester1'].memory.role = reassignRole;
-workers['Harvester2'].memory.role = reassignRole;
+if( workers['Harvester1'] ) {
+    workers['Harvester1'].memory.role = reassignRole;
+}
+if( workers['Harvester2'] ) {
+    workers['Harvester2'].memory.role = reassignRole;
+}
 
 /**
  * Put the Creeps to work
@@ -231,6 +340,86 @@ _.each(workers, function(worker) {
         }
         console.log(creepNameAndTitle(worker) + " is slaving away.");
 
+    } else if( worker_role === MINER ) {
+        // Miner's job
+
+        if( worker.memory.sourceID ) {
+            var source = Game.getObjectById(worker.memory.sourceID);
+            if( source ) {
+                if( worker.pos.isNearTo(source) ) {
+                    worker.harvest(source);
+                    console.log(creepNameAndTitle(worker) + " is happily mining away.");
+                } else {
+                    worker.moveTo(source);
+                    console.log(creepNameAndTitle(worker) + " is heading to the Source.");
+                }
+            } else {
+                console.log(creepNameAndTitle(worker) + " seems to have a corrupted memory?");
+            }
+        } else {
+            var source = nearestSourceTo(homeSpawn.pos);
+            worker.memory.sourceID = source.id;
+            console.log(creepNameAndTitle(worker) + " is looking for the nearest Source");
+        }
+    } else if( worker_role === MULE ) {
+        // Mule's job
+
+        if( worker.energy < worker.energyCapacity ) {
+            var pickup = Game.getObjectById(worker.memory.pickupID);
+            if( pickup ) {
+                if (worker.pos.isNearTo(pickup)) {
+                    var searchRadius = 1;
+                    var searchArea = {
+                        top:    pickup.pos.y - searchRadius,
+                        left:   pickup.pos.x - searchRadius,
+                        bottom: pickup.pos.y + searchRadius,
+                        right:  pickup.pos.x + searchRadius
+                    };
+                    var resultArea = worker.room.lookForAtArea('energy', searchArea.top, searchArea.left, searchArea.bottom, searchArea.right);
+                    var energySources = [];
+                    _.each(resultArea, function(row) {
+                        _.each(row, function(cell) {
+                            if( cell && cell.energy ) {
+                                energySources.push(worker.room.lookForAt('energy', cell.pos.x, cell.pos.y));
+                            }
+                        });
+                    });
+
+                    var energySource = _.sample(energySources);
+
+                    if( energySource ) {
+                        worker.pickup(energySource);
+                        console.log(creepNameAndTitle(worker) + " is picking up some Energy.");
+                    } else {
+                        console.log(creepNameAndTitle(worker) + " is waiting for some Energy to fall from the skies.");
+                    }
+                } else {
+                    worker.moveTo(pickup);
+                    console.log(creepNameAndTitle(worker) + " is heading over to the pickup point.");
+                }
+            } else {
+                console.log(creepNameAndTitle(worker) + " can't remember where to pick up Energy.");
+            }
+        } else {
+            var dropOff = Game.getObjectById(worker.memory.dropID);
+            if( dropOff ) {
+                if( worker.pos.isNearTo(dropOff) ) {
+                    if( dropOff.structureType === 'spawn' ) {
+                        // TODO: Track state so that Mule waits and completely drops all energy
+                        worker.transferEnergy(dropOff);
+                        console.log(creepNameAndTitle(worker) + " is transferring Energy to Spawn.");
+                    } else {
+                        worker.dropEnergy();
+                        console.log(creepNameAndTitle(worker) + " is unceremoniously dropping its Energy load.");
+                    }
+                } else {
+                    worker.moveTo(dropOff);
+                    console.log(creepNameAndTitle(worker) + " is plodding over to the drop off point.");
+                }
+            } else {
+                console.log(creepNameAndTitle(worker) + " can't remember where to drop off the Energy.");
+            }
+        }
     } else if( worker_role === BUILDER ) {
         // Builder's job
 
@@ -271,18 +460,42 @@ _.each(workers, function(worker) {
 
         if( worksite ) {
             if( worker.energy === 0 ) {
-                if( pauseConstruction ) {
+                var energyLocation = Game.flags.builderRefuel;
+                var searchRadius = 1;
+                var searchArea = {
+                    top:    energyLocation.pos.y - searchRadius,
+                    left:   energyLocation.pos.x - searchRadius,
+                    bottom: energyLocation.pos.y + searchRadius,
+                    right:  energyLocation.pos.x + searchRadius
+                };
+                var resultArea = worker.room.lookForAtArea('energy', searchArea.top, searchArea.left, searchArea.bottom, searchArea.right);
+                Memory.investigateArea = resultArea;
+                var energySources = [];
+                _.each(resultArea, function(row) {
+                    _.each(row, function(cell) {
+                        if( cell && cell.energy ) {
+                            energySources.push(worker.room.lookForAt('energy', cell.pos.x, cell.pos.y));
+                        }
+                    });
+                });
+
+                var energySource = _.sample(energySources);
+
+                if( Memory.pauseConstruction ) {
                     // Pause Construction while Spawn is busy creating Creeps
                     console.log(creepNameAndTitle(worker) + " has paused construction temporarily.");
                 } else {
-                    // Locate nearest fueling station if one isn't in memory already
-                    // TODO: Implement this. (Using homeSpawn for now)
-                    worker.moveTo(homeSpawn);
-                    if (homeSpawn.energy < worker.energyCapacity) {
-                        console.log(creepNameAndTitle(worker) + " is waiting for homeSpawn to recharge itself.");
+                    if( energySource ) {
+                        if (worker.pos.isNearTo(energySource)) {
+                            worker.pickup(energySource);
+                            console.log(creepNameAndTitle(worker) + " is refueling.");
+                        } else {
+                            worker.moveTo(energySource);
+                            console.log(creepNameAndTitle(worker) + " is heading over to refuel.");
+                        }
                     } else {
-                        homeSpawn.transferEnergy(worker, worker.energyCapacity);
-                        console.log(creepNameAndTitle(worker) + " is refueling at homeSpawn.");
+                        worker.moveTo(energySource);
+                        console.log(creepNameAndTitle(worker) + " can't find any fuel at the refuel station!");
                     }
                 }
             } else {
@@ -299,22 +512,50 @@ _.each(workers, function(worker) {
     } else if( worker_role === PRIEST ) {
         // Priest's job
 
-        if( homeController ) {
-            if (worker.energy < worker.energyCapacity) {
-                var source = nearestSourceTo(homeController.pos);
-
-                worker.moveTo(source);
-                worker.harvest(source);
-                console.log(creepNameAndTitle(worker) + " is collecting Energy for the Almighty Controller.");
-            } else {
-                if (worker.pos.isNearTo(homeController)) {
-                    console.log(creepNameAndTitle(worker) + " is praying at the Altar of the Controller.");
-                    worker.upgradeController(homeController);
-                } else {
-                    console.log(creepNameAndTitle(worker) + " is heading towards the Controller.");
-                    worker.moveTo(homeController);
+        var energyLocation = Game.flags.muleDrop;
+        var searchRadius = 1;
+        var searchArea = {
+            top:    energyLocation.pos.y - searchRadius,
+            left:   energyLocation.pos.x - searchRadius,
+            bottom: energyLocation.pos.y + searchRadius,
+            right:  energyLocation.pos.x + searchRadius
+        };
+        var resultArea = worker.room.lookForAtArea('energy', searchArea.top, searchArea.left, searchArea.bottom, searchArea.right);
+        Memory.investigateArea = resultArea;
+        var energySources = [];
+        _.each(resultArea, function(row) {
+            _.each(row, function(cell) {
+                if( cell && cell.energy ) {
+                    energySources.push(worker.room.lookForAt('energy', cell.pos.x, cell.pos.y));
                 }
+            });
+        });
 
+        var energySource = _.sample(energySources);
+
+        if( homeController ) {
+            if( energySource ) {
+                if (worker.energy === 0) {
+                    if (worker.pos.isNearTo(energySource)) {
+                        worker.pickup(energySource);
+                        console.log(creepNameAndTitle(worker) + " is collecting Energy for the Almighty Controller.");
+                    } else {
+                        worker.moveTo(energySource);
+                        console.log(creepNameAndTitle(worker) + " is searching for Energy for the Almighty Controller.");
+                    }
+                } else {
+                    if (worker.pos.isNearTo(homeController)) {
+                        console.log(creepNameAndTitle(worker) + " is praying at the Altar of the Controller.");
+                        worker.upgradeController(homeController);
+                    } else {
+                        console.log(creepNameAndTitle(worker) + " is heading towards the Controller.");
+                        worker.moveTo(homeController);
+                    }
+
+                }
+            } else {
+                worker.moveTo(energyLocation);
+                console.log(creepNameAndTitle(worker) + " couldn't find any dropped Energy to pickup.");
             }
         } else {
             console.log(creepNameAndTitle(worker) + " couldn't find a Controller to worship.");

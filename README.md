@@ -25,4 +25,7 @@ coding. So here are some pro tips of the regrets I have picking my room:
 4. If you accidentally kill all your Creeps, and don't have the energy to spawn new Creeps, click on
    your Spawn, and click the 'Reinforcement' button in the right sidebar. You can use this once every
    1000 game ticks.
-5. ...
+5. Build order: Extension, Ramparts, Walls
+6. ...
+
+## Example Console output:
