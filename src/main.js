@@ -29,15 +29,20 @@ if( !Memory.homeControllerID ) {
 }
 
 // Get notified every time the Controller is upgraded
-if( Memory.controllerState && Memory.controllerState.level && (homeController.level > Memory.controllerState.level) ) {
-    Game.notify("Controller was upgraded to Level " + homeController.level + "!");
-    Memory.controllerState.level = homeController.level;
+if( homeController ) {
+    if( Memory.controllerState && Memory.controllerState.level && ( homeController.level > Memory.controllerState.level) ) {
+        Game.notify("Controller was upgraded to Level " + homeController.level + "!");
+        Memory.controllerState.level = homeController.level;
+    } else {
+        Memory.controllerState = {
+            'level': homeController.level
+        };
+    }
 } else {
     Memory.controllerState = {
-        'level': homeController.level
+        'level': 1
     };
 }
-
 // Print info about Game State
 console.log("Game State:");
 
@@ -134,7 +139,7 @@ var worker_registry = {
         'body': [WORK, WORK, MOVE, MOVE],
         'keepSpawning': true,
         'memory': {
-            'sourceID': '5540ec820f7b59f66436e637'
+            'sourceID': '5540ec830f7b59f664370102'
         }
     },
     'Miner2': {
@@ -142,17 +147,17 @@ var worker_registry = {
         'body': [WORK, WORK, MOVE, MOVE],
         'keepSpawning': true,
         'memory': {
-            'sourceID': '5540ec820f7b59f66436e636'
+            'sourceID': '5540ec830f7b59f664370103'
         }
     },
-    'Miner3': {
-        'role': MINER,
-        'body': [WORK, WORK, MOVE, MOVE],
-        'keepSpawning': true,
-        'memory': {
-            'sourceID': '5540ec820f7b59f66436e637'
-        }
-    },
+    // 'Miner3': {
+    //     'role': MINER,
+    //     'body': [WORK, WORK, MOVE, MOVE],
+    //     'keepSpawning': true,
+    //     'memory': {
+    //         'sourceID': ''
+    //     }
+    // },
     'Mule1': {
         'role': MULE,
         'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
@@ -171,72 +176,72 @@ var worker_registry = {
             'dropID': homeSpawn.id
         }
     },
-    'Mule3': {
-        'role': MULE,
-        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
-        'keepSpawning': true,
-        'memory': {
-            'pickupID': Game.flags.mulePickup1.id,
-            'dropID': Game.flags.muleDrop.id
-        }
-    },
-    'Mule4': {
-        'role': MULE,
-        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
-        'keepSpawning': true,
-        'memory': {
-            'pickupID': Game.flags.mulePickup2.id,
-            'dropID': Game.flags.muleDrop.id
-        }
-    },
-    'Mule5': {
-        'role': MULE,
-        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
-        'keepSpawning': true,
-        'memory': {
-            'pickupID': Game.flags.mulePickup2.id,
-            'dropID': Game.flags.builderRefuel.id
-        }
-    },
-    'Mule6': {
-        'role': MULE,
-        'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
-        'keepSpawning': true,
-        'memory': {
-            'pickupID': Game.flags.mulePickup1.id,
-            'dropID': Game.flags.builderRefuel.id
-        }
-    },
-    'Builder1': {
-        'role': BUILDER,
-        'body': [WORK, CARRY, CARRY, CARRY, MOVE],
-        'keepSpawning': true
-    },
-    'Builder2': {
-        'role': BUILDER,
-        'body': [WORK, CARRY, CARRY, CARRY, MOVE],
-        'keepSpawning': true
-    },
-    'Priest1': {
-        'role': PRIEST,
-        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
-        'keepSpawning': true
-    },
-    'Priest2': {
-        'role': PRIEST,
-        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
-        'keepSpawning': true
-    },
-    'Priest3': {
-        'role': PRIEST,
-        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
-        'keepSpawning': true
-    },
-    'Priest4': {
-        'role': PRIEST,
-        'body': [CARRY, CARRY, WORK, MOVE, MOVE],
-        'keepSpawning': true
-    }
+    // 'Mule3': {
+    //     'role': MULE,
+    //     'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+    //     'keepSpawning': true,
+    //     'memory': {
+    //         'pickupID': Game.flags.mulePickup1.id,
+    //         'dropID': Game.flags.muleDrop.id
+    //     }
+    // },
+    // 'Mule4': {
+    //     'role': MULE,
+    //     'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+    //     'keepSpawning': true,
+    //     'memory': {
+    //         'pickupID': Game.flags.mulePickup2.id,
+    //         'dropID': Game.flags.muleDrop.id
+    //     }
+    // },
+    // 'Mule5': {
+    //     'role': MULE,
+    //     'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+    //     'keepSpawning': true,
+    //     'memory': {
+    //         'pickupID': Game.flags.mulePickup2.id,
+    //         'dropID': Game.flags.builderRefuel.id
+    //     }
+    // },
+    // 'Mule6': {
+    //     'role': MULE,
+    //     'body': [CARRY, CARRY, CARRY, CARRY, MOVE, MOVE],
+    //     'keepSpawning': true,
+    //     'memory': {
+    //         'pickupID': Game.flags.mulePickup1.id,
+    //         'dropID': Game.flags.builderRefuel.id
+    //     }
+    // },
+    // 'Builder1': {
+    //     'role': BUILDER,
+    //     'body': [WORK, CARRY, CARRY, CARRY, MOVE],
+    //     'keepSpawning': true
+    // },
+    // 'Builder2': {
+    //     'role': BUILDER,
+    //     'body': [WORK, CARRY, CARRY, CARRY, MOVE],
+    //     'keepSpawning': true
+    // },
+    // 'Priest1': {
+    //     'role': PRIEST,
+    //     'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+    //     'keepSpawning': true
+    // },
+    // 'Priest2': {
+    //     'role': PRIEST,
+    //     'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+    //     'keepSpawning': true
+    // },
+    // 'Priest3': {
+    //     'role': PRIEST,
+    //     'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+    //     'keepSpawning': true
+    // },
+    // 'Priest4': {
+    //     'role': PRIEST,
+    //     'body': [CARRY, CARRY, WORK, MOVE, MOVE],
+    //     'keepSpawning': true
+    // }
 };
 
 // pauseConstruction override in Memory
@@ -301,16 +306,16 @@ var creepNameAndTitle = function(creep) {
  * They will go back to Harvesting if homeSpawn spawns a Creep and its energy level
  * drops.
  */
-var reassignRole = HARVESTER;
-if( homeSpawn.energy === homeSpawn.energyCapacity ) {
-    reassignRole = PRIEST;
-}
-if( workers['Harvester1'] ) {
-    workers['Harvester1'].memory.role = reassignRole;
-}
-if( workers['Harvester2'] ) {
-    workers['Harvester2'].memory.role = reassignRole;
-}
+// var reassignRole = HARVESTER;
+// if( homeSpawn.energy === homeSpawn.energyCapacity ) {
+//     reassignRole = PRIEST;
+// }
+// if( workers['Harvester1'] ) {
+//     workers['Harvester1'].memory.role = reassignRole;
+// }
+// if( workers['Harvester2'] ) {
+//     workers['Harvester2'].memory.role = reassignRole;
+// }
 
 /**
  * Put the Creeps to work
